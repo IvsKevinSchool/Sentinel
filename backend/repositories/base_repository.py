@@ -1,4 +1,5 @@
 from typing import Type, TypeVar, Generic, List
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 Model = TypeVar("Model")
@@ -59,3 +60,12 @@ class BaseRepository(Generic[Model]):
         return True
         
 
+    def validate_exists(self, db: Session, id: int):
+        """Método público para validar existencia"""
+        entity = self.get(db, id)
+        if not entity:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"{self.model.__name__} not found"
+            )
+        return entity

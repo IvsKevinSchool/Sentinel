@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from repositories.user_repository import UserRepository
-from schemas.user_schema import UserCreateSchema
+from schemas.user_schema import UserCreateSchema, LoginSchema
 
 class UserService:
     def __init__(self):
@@ -26,6 +26,23 @@ class UserService:
         self._validate_user_exists(db, id)
         self.repository.delete(db, id)
         return { "message": f"User with id {id} deleted successfully" }
+    
+    def login(self, db: Session, data: LoginSchema):
+        user = self.repository.get_by_email(db, data.email)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        if user.password != data.password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        return user
     
     def _validate_user_exists(self, db: Session, id: int):
         """Private method to validate if the user instance exist"""

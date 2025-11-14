@@ -27,3 +27,12 @@ class UserResponseSchema(BaseModel):
     name: str
     email: str
     role: str
+
+class LoginSchema(BaseModel):
+    """
+    Schema to login
+    - email     (str)
+    - password  (str)
+    """
+    email: str
+    password: str
