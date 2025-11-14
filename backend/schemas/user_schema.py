@@ -10,6 +10,15 @@ class UserCreateSchema(BaseModel):
     password: str
     role: RoleEnum = RoleEnum.FeetManager
 
+class UserUpdateSchema(BaseModel):
+    """
+    Schema to update user instance.
+    """
+    name: str
+    email: str
+    password: str
+    role: RoleEnum = RoleEnum.FeetManager
+
 class UserResponseSchema(BaseModel):
     """
     Schema user response
