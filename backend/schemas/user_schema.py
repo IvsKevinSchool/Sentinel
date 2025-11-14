@@ -14,7 +14,7 @@ class UserResponseSchema(BaseModel):
     """
     Schema user response
     """
-    id: str
+    id: int
     name: str
     email: str
     role: str

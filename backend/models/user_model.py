@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum
 from enum import Enum
+
+# For each table do you want add to sqlite3, use extends from Base
 from db.session import Base
 
 class RoleEnum(str, Enum):
@@ -25,12 +27,6 @@ class User(Base):
     - role:     (Enum: ["Administrator", "Feet Manager", "Driver"] )
     """
     __tablename__ = 'users'
-
-    role_choices = [
-        "Administrator",
-        "Feet Manager",
-        "Driver"
-    ]
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)

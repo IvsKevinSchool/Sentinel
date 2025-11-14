@@ -4,6 +4,21 @@ from sqlalchemy.orm import Session
 Model = TypeVar("Model")
 
 class BaseRepository(Generic[Model]):
+    """
+    Params: 
+        - Model
+
+    def __init__(self, model: Type[Model]):
+        self.model = model
+
+    Return: 
+        - get
+        - get_all
+        - create
+        - update
+        - delete
+    """
+
     def __init__(self, model: Type[Model]):
         self.model = model
 

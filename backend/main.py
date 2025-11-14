@@ -1,18 +1,23 @@
 from fastapi import FastAPI
-from crud.user_crud import router as user_router
+from db.session import Base, engine
+
+from routes import api_router
+
+# Create all tables on DB
+Base.metadata.create_all(bind=engine)
+
 
 # Create FastAPI instance
 app = FastAPI()
 
-# Include user router
-app.include_router(user_router, prefix="", tags=["Users"])
+# Include principal router with base prefix
+app.include_router(api_router, prefix="/api")
+
+
 
 # Define a root endpoint
 @app.get("/", tags=["Root"])
 async def read_root():
     return {"Hello": "World"}
 
-@app.get("/home", tags=["Root"])
-async def read_home():
-    return {"Hello": "Home"}
 
