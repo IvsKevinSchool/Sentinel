@@ -15,6 +15,9 @@ app.include_router(api_router, prefix="/api")
 
 
 
+
+
+
 # Define a root endpoint
 @app.get("/", tags=["Root"])
 async def read_root():
