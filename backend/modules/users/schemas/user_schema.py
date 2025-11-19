@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from models.user_model import RoleEnum
+from modules.users.models.user_model import RoleEnum
 
 class UserCreateSchema(BaseModel):
     """

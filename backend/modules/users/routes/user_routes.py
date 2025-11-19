@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 from db.session import get_db 
-from services.user_service import UserService
-from schemas.generic_schema import MessageResponse
-from schemas.user_schema import UserCreateSchema, UserUpdateSchema, UserResponseSchema, LoginSchema
+from modules.users.services.user_service import UserService
+from modules.core.schemas.generic_schema import MessageResponse
+from modules.users.schemas.user_schema import UserCreateSchema, UserUpdateSchema, UserResponseSchema, LoginSchema
 
 # Create alias for db depends
 DbSession = Annotated[Session, Depends(get_db)]
