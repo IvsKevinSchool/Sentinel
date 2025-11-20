@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
+from modules.core.events.event_bus import EventBus
 from modules.users.repositories.user_repository import UserRepository
 from modules.users.schemas.user_schema import UserCreateSchema, LoginSchema
 
@@ -16,7 +17,51 @@ class UserService:
         return self.repository.get(db, id)
 
     def create_user(self, db: Session, data: UserCreateSchema):
-        return self.repository.create(db, data.model_dump())
+        """
+        Create a new user in the system.
+        
+        This method creates a user and publishes a 'user.created' event
+        that triggers welcome notifications and other system reactions.
+        
+        Args:
+            db: Database session
+            data: User creation data (validated by Pydantic)
+        
+        Returns:
+            Created User object
+        
+        Raises:
+            HTTPException: If email already exists or validation fails
+        
+        Event Published:
+            'user.created' with payload:
+                - user_id: ID of the created user
+                - username: User's name
+                - email: User's email
+                - role: User's role
+        """
+        # Check if email already exists
+        existing_user = self.repository.get_by_email(db, data.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Create user
+        user = self.repository.create(db, data.model_dump())
+        
+        # Publish event for notifications and other side effects
+        EventBus.publish('user.created', {
+            'user_id': user.id,
+            'username': user.name,
+            'email': user.email,
+            'role': user.role
+        })
+        
+        print(f"✓ User '{user.name}' created successfully (ID: {user.id})")
+        
+        return user
     
     def update_user(self, db: Session, data, id: int):
         self._validate_user_exists(db, id)
