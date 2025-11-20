@@ -1,7 +1,10 @@
 from typing import Protocol
 from sqlalchemy.orm import Session
 
-class IUsers(Protocol):
+from modules.users.schemas.user_schema import UserCreateSchema
+from modules.users.models.user_model import User
 
-    def get_users(self, db: Session) -> None:
+class IUser(Protocol):
+
+    def create_user(self, db: Session, data: UserCreateSchema) -> User:
         ...
