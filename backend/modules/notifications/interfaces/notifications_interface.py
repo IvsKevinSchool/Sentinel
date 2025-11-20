@@ -1,37 +1,41 @@
 """
-Notifications Interface Module
+Notification Interface Module
 
-Defines the contract for notifications services using Protocol (structural typing).
-Any class implementing these methods can be used as a notifications service.
+Defines the contract for notification services using Protocol (structural typing).
+Any class implementing these methods can be used as a notification service.
 """
 
 from typing import Protocol, List
 from sqlalchemy.orm import Session
 
-class INotificationsService(Protocol):
+class INotificationService(Protocol):
     """
-    Interface for notifications services.
+    Interface for notification services.
     
-    This protocol defines the contract that any notifications service must implement.
+    This protocol defines the contract that any notification service must implement.
     Using Protocol allows for structural typing without explicit inheritance.
     """
     
-    def get_notificationss(self, db: Session) -> List:
-        """Get all notificationss"""
+    def get_notifications(self, db: Session) -> List:
+        """Get all notifications"""
         ...
     
-    def get_notifications_by_id(self, db: Session, id: int):
-        """Get notifications by ID"""
+    def get_notification_by_id(self, db: Session, id: int):
+        """Get notification by ID"""
         ...
     
-    def create_notifications(self, db: Session, data: dict):
-        """Create a new notifications"""
+    def create_notification(self, db: Session, data: dict):
+        """Create a new notification"""
         ...
     
-    def update_notifications(self, db: Session, data: dict, id: int):
-        """Update an existing notifications"""
+    def update_notification(self, db: Session, data: dict, id: int):
+        """Update an existing notification"""
         ...
     
-    def delete_notifications(self, db: Session, id: int):
-        """Delete a notifications"""
+    def delete_notification(self, db: Session, id: int):
+        """Delete a notification"""
+        ...
+
+    def send_welcome_email(self, email: str):
+        """Welcome message for new user"""
         ...
