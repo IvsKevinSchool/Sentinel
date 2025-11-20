@@ -45,7 +45,7 @@ if __name__ == "__main__":
         print("Starting FastAPI server in DEVELOPMENT mode (hot reload enabled)...")
         uvicorn.run(
             "main:app", 
-            host="0.0.0.0", 
+            host="localhost", 
             port=8000,
             reload=True,
             log_level="debug"
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         print("Starting FastAPI server in PRODUCTION mode...")
         uvicorn.run(
             "main:app", 
-            host="0.0.0.0", 
+            host="localhost", 
             port=8000,
             reload=False,
             log_level="info"
