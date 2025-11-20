@@ -7,135 +7,303 @@ Implements INotificationsService interface.
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from typing import List
+from typing import List, Dict
 
-from modules.notifications.repositories.notifications_repository import NotificationsRepository
+from modules.notifications.repositories.notifications_repository import NotificationRepository
 from modules.notifications.schemas.notifications_schema import (
-    NotificationsCreateSchema, 
-    NotificationsUpdateSchema
+    NotificationCreateSchema,
+    NotificationUpdateSchema,
+    NotificationResponse,
+    NotificationSummary
 )
+from modules.notifications.models.notifications_model import Notification
 from modules.core.events.event_bus import EventBus
 
-class NotificationsService:
+class NotificationService:
     """
-    Service layer for notifications operations.
+    Service layer for notification management.
     
-    Handles business logic and coordinates between repository and controllers.
+    This service handles all business logic related to notifications,
+    including creation, retrieval, updates, and deletion. It acts as
+    an intermediary between the API layer and the data access layer.
+    
+    The service publishes events through EventBus to maintain loose
+    coupling with other system components.
+    
+    Attributes:
+        repository: NotificationRepository instance for data access
     """
     
     def __init__(self):
-        """Initialize with notifications repository"""
-        self.repository = NotificationsRepository()
-
-    def get_notificationss(self, db: Session):
         """
-        Get all notificationss.
+        Initialize NotificationService with repository dependency.
+        
+        The repository is instantiated here, but in a more advanced
+        implementation, it could be injected through the Container.
+        """
+        self.repository = NotificationRepository()
+
+    def get_notifications(self, db: Session) -> List[Notification]:
+        """
+        Retrieve all notifications in the system.
         
         Args:
-            db (Session): Database session
+            db: Database session
         
         Returns:
-            List of notificationss
+            List of all Notification objects
+        
+        Example:
+            >>> service = NotificationService()
+            >>> notifications = service.get_notifications(db)
         """
         return self.repository.get_all(db)
     
-    def get_notifications_by_id(self, db: Session, id: int):
+    def get_user_notifications(self, db: Session, user_id: int) -> List[Notification]:
         """
-        Get notifications by ID.
+        Retrieve all notifications for a specific user.
         
         Args:
-            db (Session): Database session
-            id (int): Notifications ID
+            db: Database session
+            user_id: ID of the user
         
         Returns:
-            Notifications instance
+            List of user's notifications ordered by creation date
+        
+        Example:
+            >>> service = NotificationService()
+            >>> notifications = service.get_user_notifications(db, user_id=1)
+        """
+        return self.repository.get_by_user_id(db, user_id)
+    
+    def get_unread_notifications(self, db: Session, user_id: int) -> List[Notification]:
+        """
+        Retrieve unread notifications for a specific user.
+        
+        Args:
+            db: Database session
+            user_id: ID of the user
+        
+        Returns:
+            List of unread notifications
+        
+        Example:
+            >>> service = NotificationService()
+            >>> unread = service.get_unread_notifications(db, user_id=1)
+        """
+        return self.repository.get_unread_by_user_id(db, user_id)
+    
+    def get_notification_summary(self, db: Session, user_id: int) -> NotificationSummary:
+        """
+        Get notification statistics for a user.
+        
+        Provides a summary of total and unread notifications without
+        loading all notification objects.
+        
+        Args:
+            db: Database session
+            user_id: ID of the user
+        
+        Returns:
+            NotificationSummary with total and unread counts
+        
+        Example:
+            >>> service = NotificationService()
+            >>> summary = service.get_notification_summary(db, user_id=1)
+            >>> print(f"Unread: {summary.unread}/{summary.total}")
+        """
+        all_notifications = self.repository.get_by_user_id(db, user_id)
+        unread_count = self.repository.count_unread_by_user_id(db, user_id)
+        
+        return NotificationSummary(
+            total=len(all_notifications),
+            unread=unread_count
+        )
+    
+    def get_notification_by_id(self, db: Session, notification_id: int) -> Notification:
+        """
+        Retrieve a specific notification by ID.
+        
+        Args:
+            db: Database session
+            notification_id: ID of the notification
+        
+        Returns:
+            Notification object
         
         Raises:
-            HTTPException: If notifications not found
+            HTTPException: If notification not found (404)
+        
+        Example:
+            >>> service = NotificationService()
+            >>> notification = service.get_notification_by_id(db, 5)
         """
-        self._validate_notifications_exists(db, id)
-        return self.repository.get(db, id)
-
-    def create_notifications(self, db: Session, data: NotificationsCreateSchema):
-        """
-        Create a new notifications.
-        
-        Args:
-            db (Session): Database session
-            data (NotificationsCreateSchema): Notifications data
-        
-        Returns:
-            Created notifications
-        """
-        notifications = self.repository.create(db, data.model_dump())
-        
-        # Publish event
-        EventBus.publish('notifications.created', {
-            'notifications_id': notifications.id,
-            'name': notifications.name
-        })
-        
-        return notifications
-    
-    def update_notifications(self, db: Session, data: NotificationsUpdateSchema, id: int):
-        """
-        Update an existing notifications.
-        
-        Args:
-            db (Session): Database session
-            data (NotificationsUpdateSchema): Update data
-            id (int): Notifications ID
-        
-        Returns:
-            Updated notifications
-        """
-        self._validate_notifications_exists(db, id)
-        notifications = self.repository.update(db, data.model_dump(exclude_unset=True), id)
-        
-        # Publish event
-        EventBus.publish('notifications.updated', {
-            'notifications_id': notifications.id,
-            'name': notifications.name
-        })
-        
-        return notifications
-    
-    def delete_notifications(self, db: Session, id: int):
-        """
-        Delete a notifications.
-        
-        Args:
-            db (Session): Database session
-            id (int): Notifications ID
-        
-        Returns:
-            Success message
-        """
-        self._validate_notifications_exists(db, id)
-        
-        # Publish event before deletion
-        EventBus.publish('notifications.deleted', {
-            'notifications_id': id
-        })
-        
-        self.repository.delete(db, id)
-        return {"message": f"Notifications with id {id} deleted successfully"}
-    
-    def _validate_notifications_exists(self, db: Session, id: int):
-        """
-        Private method to validate if the notifications instance exists.
-        
-        Args:
-            db (Session): Database session
-            id (int): Notifications ID
-        
-        Raises:
-            HTTPException: If notifications not found
-        """
-        notifications = self.repository.get(db, id)
-        if not notifications:
+        notification = self.repository.get(db, notification_id)
+        if not notification:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="Notifications not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
             )
-        return notifications
+        return notification
+
+    def create_notification(
+        self, 
+        db: Session, 
+        fk_user: int, 
+        title: str, 
+        message: str, 
+        notification_type: str = "info"
+    ) -> Notification:
+        """
+        Create a new notification for a user.
+        
+        This method creates a notification and publishes a 'notification.created'
+        event that other parts of the system can react to (e.g., sending emails,
+        push notifications, etc.).
+        
+        Args:
+            db: Database session
+            fk_user: ID of the user to notify
+            title: Notification title
+            message: Notification content
+            notification_type: Type of notification (info, warning, success, error)
+        
+        Returns:
+            Created Notification object
+        
+        Raises:
+            HTTPException: If user doesn't exist (validated by foreign key)
+        
+        Example:
+            >>> service = NotificationService()
+            >>> notification = service.create_notification(
+            ...     db,
+            ...     fk_user=1,
+            ...     title="Welcome",
+            ...     message="Welcome to Sentinel!",
+            ...     notification_type="success"
+            ... )
+        """
+        notification_data = {
+            "fk_user": fk_user,
+            "title": title,
+            "message": message,
+            "notification_type": notification_type
+        }
+        
+        try:
+            notification = self.repository.create(db, notification_data)
+            
+            # Publish event for other system components
+            EventBus.publish('notification.created', {
+                'notification_id': notification.id,
+                'fk_user': fk_user,
+                'title': title,
+                'message': message,
+                'notification_type': notification_type
+            })
+            
+            return notification
+            
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Error creating notification: {str(e)}"
+            )
+        
+    def mark_as_read(self, db: Session, notification_id: int) -> Notification:
+        """
+        Mark a notification as read.
+        
+        Args:
+            db: Database session
+            notification_id: ID of the notification
+        
+        Returns:
+            Updated Notification object
+        
+        Raises:
+            HTTPException: If notification not found (404)
+        
+        Example:
+            >>> service = NotificationService()
+            >>> notification = service.mark_as_read(db, notification_id=5)
+        """
+        notification = self.repository.mark_as_read(db, notification_id)
+        
+        if not notification:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+        
+        # Publish event
+        EventBus.publish('notification.read', {
+            'pk_notification': notification.pk_notification,
+            'fk_user': notification.fk_user
+        })
+        
+        return notification
+
+    def mark_all_as_read(self, db: Session, user_id: int) -> Dict[str, int]:
+        """
+        Mark all unread notifications as read for a user.
+        
+        Args:
+            db: Database session
+            user_id: ID of the user
+        
+        Returns:
+            Dictionary with count of notifications marked as read
+        
+        Example:
+            >>> service = NotificationService()
+            >>> result = service.mark_all_as_read(db, user_id=1)
+            >>> print(f"{result['count']} notifications marked as read")
+        """
+        count = self.repository.mark_all_as_read_by_user(db, user_id)
+        
+        # Publish event
+        EventBus.publish('notifications.all_read', {
+            'pk_user': user_id,
+            'count': count
+        })
+        
+        return {"count": count, "message": f"{count} notifications marked as read"}
+    
+    def delete_notification(self, db: Session, notification_id: int) -> Dict[str, str]:
+        """
+        Delete a specific notification.
+        
+        Args:
+            db: Database session
+            notification_id: ID of the notification to delete
+        
+        Returns:
+            Success message dictionary
+        
+        Raises:
+            HTTPException: If notification not found (404)
+        
+        Example:
+            >>> service = NotificationService()
+            >>> result = service.delete_notification(db, notification_id=5)
+        """
+        notification = self.repository.get(db, notification_id)
+        
+        if not notification:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+        
+        user_id = notification.fk_user
+        self.repository.delete(db, notification_id)
+        
+        # Publish event
+        EventBus.publish('notification.deleted', {
+            'pk_notification': notification_id,
+            'fk_user': user_id
+        })
+        
+        return {"message": "Notification deleted successfully"}
