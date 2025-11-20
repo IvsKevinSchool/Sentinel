@@ -10,7 +10,7 @@ from typing import List, Optional
 from modules.core.repositories.base_repository import BaseRepository
 from modules.notifications.models.notifications_model import Notification
 
-class NotificationsRepository(BaseRepository[Notification]):
+class NotificationRepository(BaseRepository[Notification]):
     """
     Repository for Notifications entity operations.
     
