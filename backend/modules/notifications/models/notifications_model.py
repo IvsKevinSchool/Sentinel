@@ -34,8 +34,8 @@ class Notification(Base):
     and maintaining a relationship with the User model.
 
     Attributes:
-        - pk_notification       (int): Primary key, unique identifier for the notification.
-        - fk_user               (int): Foreign key linking to the user table.
+        - id                    (int): Primary key, unique identifier for the notification.
+        - user_id               (int): Foreign key linking to the user table.
         - title                 (str): Notification title/subject
         - message               (str): Notification content/body
         - notification_type     (str): Type of notification (info, warning, success, error)
@@ -54,7 +54,7 @@ class Notification(Base):
 
     Example:
         >>> nofication = Notification(
-        ...     fk_user=1
+        ...     user_id=1
         ...     title="Welcome"
         ...     message="Welcome to Sentinel"
         ...     notification_type=NotificationType.SUCCESS
@@ -63,8 +63,8 @@ class Notification(Base):
 
     __tablename__ = "notifications"
 
-    pk_notification = Column(Integer, primary_key=True, index=True)
-    fk_user = Column(Integer, ForeignKey("users.pk_user", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     title = Column(String(100), nullable=False)
     message = Column(String(500), nullable=False)
     notification_type = Column(SqlEnum(NotificationType), default=NotificationType.INFO)
@@ -77,4 +77,4 @@ class Notification(Base):
 
     def __repr__(self):
         """String representation for debugging"""
-        return f"<Notification(id={self.pk_notification}, user_id={self.fk_user}, type={self.notification_type}, read={self.is_read})>"
+        return f"<Notification(id={self.id}, user_id={self.user_id}, type={self.notification_type}, read={self.is_read})>"

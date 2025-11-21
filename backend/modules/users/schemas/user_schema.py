@@ -8,7 +8,7 @@ class UserCreateSchema(BaseModel):
     name: str
     email: str
     password: str
-    role: RoleEnum = RoleEnum.FeetManager
+    role: RoleEnum = RoleEnum.FEET_MANAGER
 
 class UserUpdateSchema(BaseModel):
     """
@@ -17,7 +17,7 @@ class UserUpdateSchema(BaseModel):
     name: str
     email: str
     password: str
-    role: RoleEnum = RoleEnum.FeetManager
+    role: RoleEnum = RoleEnum.FEET_MANAGER
 
 class UserResponseSchema(BaseModel):
     """

@@ -149,7 +149,7 @@ class NotificationService:
     def create_notification(
         self, 
         db: Session, 
-        fk_user: int, 
+        user_id: int, 
         title: str, 
         message: str, 
         notification_type: str = "info"
@@ -163,7 +163,7 @@ class NotificationService:
         
         Args:
             db: Database session
-            fk_user: ID of the user to notify
+            user_id: ID of the user to notify
             title: Notification title
             message: Notification content
             notification_type: Type of notification (info, warning, success, error)
@@ -178,14 +178,14 @@ class NotificationService:
             >>> service = NotificationService()
             >>> notification = service.create_notification(
             ...     db,
-            ...     fk_user=1,
+            ...     user_id=1,
             ...     title="Welcome",
             ...     message="Welcome to Sentinel!",
             ...     notification_type="success"
             ... )
         """
         notification_data = {
-            "fk_user": fk_user,
+            "user_id": user_id,
             "title": title,
             "message": message,
             "notification_type": notification_type
@@ -197,7 +197,7 @@ class NotificationService:
             # Publish event for other system components
             EventBus.publish('notification.created', {
                 'notification_id': notification.id,
-                'fk_user': fk_user,
+                'user_id': user_id,
                 'title': title,
                 'message': message,
                 'notification_type': notification_type
@@ -239,8 +239,8 @@ class NotificationService:
         
         # Publish event
         EventBus.publish('notification.read', {
-            'pk_notification': notification.pk_notification,
-            'fk_user': notification.fk_user
+            'id': notification.id,
+            'user_id': notification.user_id
         })
         
         return notification
@@ -265,7 +265,7 @@ class NotificationService:
         
         # Publish event
         EventBus.publish('notifications.all_read', {
-            'pk_user': user_id,
+            'user_id': user_id,
             'count': count
         })
         
@@ -297,13 +297,13 @@ class NotificationService:
                 detail="Notification not found"
             )
         
-        user_id = notification.fk_user
+        user_id = notification.user_id
         self.repository.delete(db, notification_id)
         
         # Publish event
         EventBus.publish('notification.deleted', {
-            'pk_notification': notification_id,
-            'fk_user': user_id
+            'id': notification_id,
+            'user_id': user_id
         })
         
         return {"message": "Notification deleted successfully"}

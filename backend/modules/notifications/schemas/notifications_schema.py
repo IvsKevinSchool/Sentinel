@@ -33,7 +33,7 @@ class NotificationCreateSchema(NotificationBase):
         message: Notification content
         notification_type: Type of notification
     """
-    fk_user: int = Field(..., gt=0, description="ID of the user to notify")
+    user_id: int = Field(..., gt=0, description="ID of the user to notify")
 
 class NotificationUpdateSchema(BaseModel):
     """
@@ -52,14 +52,14 @@ class NotificationResponse(NotificationBase):
     Includes all fields from the database model.
     
     Attributes:
-        pk_notification:    Notification unique identifier
-        fk_user:            ID of the user who owns the notification
+        id:                 Notification unique identifier
+        user_id:            ID of the user who owns the notification
         is_read:            Whether the notification has been read
         created_at:         When the notification was created
         updated_at:         When the notification was last modified
     """
-    pk_notification: int
-    fk_user: int
+    id: int
+    user_id: int
     is_read: bool
     created_at: datetime
     updated_at: datetime

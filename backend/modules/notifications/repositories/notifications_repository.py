@@ -49,7 +49,7 @@ class NotificationRepository(BaseRepository[Notification]):
             >>> notifications = repo.get_by_user_id(db, user_id=1)
             >>> print(f"User has {len(notifications)} notifications")
         """
-        return db.query(self.model).filter(self.model.fk_user==user_id)\
+        return db.query(self.model).filter(self.model.user_id==user_id)\
         .order_by(self.model.created_at.desc()).all()
     
     def get_unread_by_user_id(self, db: Session, user_id: int) -> List[Notification]:
@@ -70,7 +70,7 @@ class NotificationRepository(BaseRepository[Notification]):
         """
         return db.query(self.model)\
             .filter(
-                self.model.fk_user == user_id,
+                self.model.user_id == user_id,
                 self.model.is_read == False
             )\
             .order_by(self.model.created_at.desc())\
@@ -97,7 +97,7 @@ class NotificationRepository(BaseRepository[Notification]):
         """
         return db.query(self.model)\
             .filter(
-                self.model.fk_user == user_id,
+                self.model.user_id == user_id,
                 self.model.is_read == False
             )\
             .count()
@@ -145,7 +145,7 @@ class NotificationRepository(BaseRepository[Notification]):
         """
         count = db.query(self.model)\
             .filter(
-                self.model.fk_user == user_id,
+                self.model.user_id == user_id,
                 self.model.is_read == False
             )\
             .update({"is_read": True})
@@ -171,7 +171,7 @@ class NotificationRepository(BaseRepository[Notification]):
             >>> print(f"{count} notifications deleted")
         """
         count = db.query(self.model)\
-            .filter(self.model.fk_user == user_id)\
+            .filter(self.model.user_id == user_id)\
             .delete()
         db.commit()
         return count

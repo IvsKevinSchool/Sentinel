@@ -28,7 +28,7 @@ class User(Base):
     other entities like notifications.
 
     Attributes:
-    - pk_user:          (int) Primary key, unique identifier
+    - id:               (int) Primary key, unique identifier
     - name:             (str) User's full name 
     - email:            (str) User's email address (unique) 
     - password:         (str) Hashed password for authentication
@@ -49,7 +49,7 @@ class User(Base):
     """
     __tablename__ = 'users'
 
-    pk_user = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     email = Column(String, unique=True)
     password = Column(String)
@@ -65,4 +65,4 @@ class User(Base):
 
     def __repr__(self):
         """String representation for debugging"""
-        return f"<User id={self.pk_user}, email={self.email}, role={self.role}>"
+        return f"<User id={self.id}, email={self.email}, role={self.role}>"

@@ -35,20 +35,20 @@ def on_user_created(payload: dict):
     """
     db: Session = SessionLocal()
     try:
-        fk_user = payload.get('fk_user')
+        user_id = payload.get('user_id')
         username = payload.get('username')
         
         # Create welcome notification
         notification_service.create_notification(
             db,
-            fk_user=fk_user,
+            user_id=user_id,
             title="¡Bienvenido a Sentinel!",
             message=f"Hola {username}, tu cuenta ha sido creada exitosamente. "
                    f"Estamos felices de tenerte en nuestro sistema de gestión de flotas.",
             notification_type="success"
         )
         
-        print(f"✓ Welcome notification sent to user {username} (ID: {fk_user})")
+        print(f"✓ Welcome notification sent to user {username} (ID: {user_id})")
         
     except Exception as e:
         print(f"✗ Error creating welcome notification: {e}")
